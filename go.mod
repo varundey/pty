@@ -1,4 +1,4 @@
-module github.com/creack/pty
+module github.com/varundey/pty
 
 go 1.18
 
