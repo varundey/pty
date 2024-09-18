@@ -34,11 +34,14 @@ func TestReadDeadline(t *testing.T) {
 		t.Fatalf("Error: set non block: %s", err)
 	}
 
-	if err := ptmx.SetDeadline(time.Now().Add(timeout / 10)); err != nil {
-		if errors.Is(err, os.ErrNoDeadline) {
+	if ptmxd, ok := ptmx.(DeadlineHolder); ok {
+		err := ptmxd.SetDeadline(time.Now().Add(timeout / 10))
+		if err != nil {
+			if errors.Is(err, os.ErrNoDeadline) {
 			t.Skipf("Deadline is not supported on %s/%s.", runtime.GOOS, runtime.GOARCH)
-		} else {
+			} else {
 			t.Fatalf("Error: set deadline: %s.", err)
+			}
 		}
 	}
 
@@ -86,9 +89,8 @@ func TestReadClose(t *testing.T) {
 }
 
 // Open pty and setup watchdogs for graceful and not so graceful failure modes.
-func prepare(t *testing.T) (ptmx *os.File, done func()) {
+func prepare(t *testing.T) (ptmx Pty, done func()) {
 	t.Helper()
-
 	if runtime.GOOS == "darwin" {
 		t.Log("creack/pty uses blocking i/o on darwin intentionally:")
 		t.Log("> https://github.com/creack/pty/issues/52")
